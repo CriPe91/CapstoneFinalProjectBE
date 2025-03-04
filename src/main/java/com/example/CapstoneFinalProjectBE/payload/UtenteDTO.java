@@ -1,6 +1,6 @@
 package com.example.CapstoneFinalProjectBE.payload;
 
-import com.example.CapstoneFinalProjectBE.model.Evento;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -22,7 +22,11 @@ public class UtenteDTO {
     @Email
     private String email;
 
-    private boolean isAdmin = false; // Di default FALSE è User, TRUE è ADMIN
+    @JsonIgnore // Questa annotazione esclude la password dalle risposte JSON
+    @NotNull(message = "Il campo password è obbligatorio")
+    private String password;
+
+    private Boolean isAdmin; // Di default FALSE è User, TRUE è ADMIN
 
     private List<EventoDTO> eventiPrenotati;
 

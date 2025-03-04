@@ -22,6 +22,7 @@ public class RegistrazioneRequest {
     @Size(min = 3, max = 20)
     private String password;
 
-    private boolean isAdmin = false; // Per default l'utente non è admin
+
+    private Boolean isAdmin; // Per default l'utente non è admin
 
 }

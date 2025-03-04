@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
 
+
 @Component
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
@@ -26,15 +27,27 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            // Recupero il token dalla request
+            // Controllo se la richiesta riguarda la registrazione o il login (non richiedono token)
+            String path = request.getServletPath();
+            if (path.equals("/user/register") || path.equals("/user/login")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // Recupero il token dalla richiesta
             String token = jwtUtil.recuperoToken(request);
+            if (token == null || token.isEmpty()) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             Claims claims = jwtUtil.validaClaims(request);
 
             // Controlliamo la validità del token
             if (claims != null && jwtUtil.checkExpiration(claims)) {
                 boolean isAdmin = (boolean) claims.get("isAdmin");
 
-                // Assegniamo il ruolo in base a isAdmin
+                //  Assegniamo il ruolo corretto in base a isAdmin
                 List<SimpleGrantedAuthority> ruoli = List.of(new SimpleGrantedAuthority(isAdmin ? "ROLE_ADMIN" : "ROLE_USER"));
 
                 // Creiamo il token di autenticazione
@@ -45,7 +58,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // Gestione errore di autenticazione
+            // Se il token è invalido o mancante, gestiamo l'errore
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             Map<String, Object> errorDetails = new HashMap<>();

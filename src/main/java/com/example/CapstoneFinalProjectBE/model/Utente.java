@@ -26,7 +26,7 @@ public class Utente {
 
     private String password;
 
-    private boolean isAdmin = false; // Di default = FALSE è User normale, Se TRUE è un ADMIN
+    private Boolean isAdmin; // Di default = FALSE è User normale, Se TRUE è un ADMIN
 
     @ManyToMany(mappedBy = "utenti")
     private List<Evento> eventiPrenotati;

@@ -42,7 +42,7 @@ public class JwtUtil {
      */
     public String creaToken(Utente utente) {
         Claims claims = Jwts.claims().setSubject(utente.getEmail()); // Usiamo l'email come identificativo
-        claims.put("isAdmin", utente.isAdmin()); // Salviamo il valore booleano isAdmin
+        claims.put("isAdmin", utente.getIsAdmin()); // Salviamo il valore booleano isAdmin
         claims.put("email", utente.getEmail());
 
         // ⏳ Impostiamo la data di scadenza del token

@@ -26,7 +26,7 @@ public class WebSecurityConfig {
     private JwtAuthorizationFilter jwtAuthorizationFilter;
 
     /**
-     * 🔐 Bean per la codifica delle password con BCrypt
+     *  Bean per la codifica delle password con BCrypt
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -34,7 +34,7 @@ public class WebSecurityConfig {
     }
 
     /**
-     * 🔑 Configura l'AuthenticationManager per gestire l'autenticazione
+     *  Configura l'AuthenticationManager per gestire l'autenticazione
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
@@ -47,22 +47,21 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
-        // Disabilitiamo CORS e CSRF perché useremo JWT (stateless)
+        //  Disabilitiamo CORS e CSRF perché useremo JWT (stateless)
         httpSecurity.cors(cors -> cors.disable()).csrf(csrf -> csrf.disable());
 
-        // Configuriamo i permessi di accesso alle API
+        //  Configuriamo i permessi di accesso alle API
         httpSecurity.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/user/create").permitAll() // 🔓 Permettiamo la registrazione senza autenticazione
-                .requestMatchers("/user/login").permitAll() // 🔓 Permettiamo il login senza autenticazione
-                .requestMatchers("/user/auth/**").hasRole("USER") // 🔒 Solo gli utenti autenticati possono accedere a `/auth/**`
-                .requestMatchers("/user/admin/**").hasRole("ADMIN") // 🔒 Solo gli admin possono accedere a `/admin/**`
-                .anyRequest().authenticated() // 🔒 Tutte le altre richieste richiedono autenticazione
+                .requestMatchers("/user/register", "/user/login").permitAll() // Permettiamo registrazione e login senza autenticazione
+                .requestMatchers("/user/auth/**").hasRole("USER") // Solo gli utenti autenticati possono accedere a `/auth/**`
+                .requestMatchers("/user/admin/**").hasRole("ADMIN") // Solo gli admin possono accedere a `/admin/**`
+                .anyRequest().authenticated() // Tutte le altre richieste richiedono autenticazione
         );
 
-        // Configuriamo il meccanismo di autenticazione stateless
+        //  Configuriamo il meccanismo di autenticazione stateless
         httpSecurity.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // Aggiungiamo il nostro filtro JWT prima del filtro di autenticazione di Spring Security
+        //  Aggiungiamo il nostro filtro JWT prima del filtro di autenticazione di Spring Security
         httpSecurity.addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,41 +20,31 @@ import java.util.List;
 public class UtenteService {
 
     @Autowired
-    UtenteRepository utenteRepo;
+    private UtenteRepository utenteRepo;
 
-
-    // CREAZIONE UTENTE
-    public String creaUtente(UtenteDTO utenteDTO) {
-        checkDuplicateKey(utenteDTO.getEmail());
-
-        Utente utente = dtoToEntity(utenteDTO);
-        utenteRepo.save(utente);
-
-        return "Utente creato correttamente con ID: " + utente.getId();
-    }
-
-    // OTTIENI UN UTENTE PER ID
+    // OTTIENI UN UTENTE PER ID (SOLO ADMIN)
+    @PreAuthorize("hasRole('ADMIN')") // Solo gli Admin possono cercare utenti per ID
     public UtenteDTO getUtenteById(Long id) {
         Utente utente = utenteRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato con ID: " + id));
-
         return entityToDto(utente);
     }
 
-    // OTTIENI TUTTI GLI UTENTI CON PAGINAZIONE
+    // OTTIENI TUTTI GLI UTENTI CON PAGINAZIONE (SOLO ADMIN)
+    @PreAuthorize("hasRole('ADMIN')") // Solo gli Admin possono visualizzare tutti gli utenti
     public Page<UtenteDTO> getAllUtenti(Pageable pageable) {
         Page<Utente> listaUtenti = utenteRepo.findAll(pageable);
         List<UtenteDTO> listaUtentiDTO = new ArrayList<>();
 
         for (Utente utente : listaUtenti.getContent()) {
-            UtenteDTO dto = entityToDto(utente);
-            listaUtentiDTO.add(dto);
+            listaUtentiDTO.add(entityToDto(utente));
         }
 
         return new PageImpl<>(listaUtentiDTO, pageable, listaUtenti.getTotalElements());
     }
 
-    // ELIMINA UN UTENTE
+    // ELIMINA UN UTENTE (SOLO ADMIN)
+    @PreAuthorize("hasRole('ADMIN')") // Solo gli Admin possono eliminare utenti
     public String deleteUtente(Long id) {
         Utente utente = utenteRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato con ID: " + id));
@@ -61,34 +52,15 @@ public class UtenteService {
         return "Utente con ID: " + id + " eliminato con successo.";
     }
 
-
-
-    // CONTROLLO DUPLICAZIONE EMAIL
-    public void checkDuplicateKey(String email) throws EmailDuplicateException {
-        if (utenteRepo.existsByEmail(email)) {
-            throw new EmailDuplicateException("Email già utilizzata da un altro utente");
-        }
+    // TRAVASO ENTITY → DTO
+    private UtenteDTO entityToDto(Utente utente) {
+        UtenteDTO dto = new UtenteDTO();
+        dto.setId(utente.getId());
+        dto.setNome(utente.getNome());
+        dto.setCognome(utente.getCognome());
+        dto.setEmail(utente.getEmail());
+        dto.setIsAdmin(utente.getIsAdmin());
+        return dto;
     }
-
-// TRAVASO DTO → ENTITY
-private Utente dtoToEntity(UtenteDTO dto) {
-    Utente utente = new Utente();
-    utente.setNome(dto.getNome());
-    utente.setCognome(dto.getCognome());
-    utente.setEmail(dto.getEmail());
-    utente.setAdmin(dto.isAdmin());
-    return utente;
-}
-
-// TRAVASO ENTITY → DTO
-private UtenteDTO entityToDto(Utente utente) {
-    UtenteDTO dto = new UtenteDTO();
-    dto.setId(utente.getId());
-    dto.setNome(utente.getNome());
-    dto.setCognome(utente.getCognome());
-    dto.setEmail(utente.getEmail());
-    dto.setAdmin(utente.isAdmin());
-    return dto;
-}
 }
 
