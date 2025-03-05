@@ -2,6 +2,7 @@ package com.example.CapstoneFinalProjectBE.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -52,19 +53,34 @@ public class WebSecurityConfig {
 
         //  Configuriamo i permessi di accesso alle API
         httpSecurity.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/user/register", "/user/login").permitAll() // Permettiamo registrazione e login senza autenticazione
-                .requestMatchers("/user/auth/**").hasRole("USER") // Solo gli utenti autenticati possono accedere a `/auth/**`
-                .requestMatchers("/user/admin/**").hasRole("ADMIN") // Solo gli admin possono accedere a `/admin/**`
-                .anyRequest().authenticated() // Tutte le altre richieste richiedono autenticazione
+                //  Permettiamo la registrazione e il login senza autenticazione
+                .requestMatchers("/user/register", "/user/login").permitAll()
+
+                //  Permettiamo a tutti di visualizzare gli ospedali e gli eventi
+                .requestMatchers(HttpMethod.GET, "/ospedali/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/eventi/**").permitAll()
+
+                //  Solo gli admin possono creare, modificare o eliminare ospedali ed eventi
+                .requestMatchers(HttpMethod.POST, "/ospedali/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/ospedali/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/ospedali/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/eventi/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/eventi/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/eventi/**").hasRole("ADMIN")
+
+                //  Solo utenti autenticati possono prenotarsi agli eventi
+                .requestMatchers(HttpMethod.POST, "/eventi/prenotazione/**").hasRole("USER")
+
+                //  Qualsiasi altra richiesta richiede autenticazione
+                .anyRequest().authenticated()
         );
 
         //  Configuriamo il meccanismo di autenticazione stateless
         httpSecurity.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        //  Aggiungiamo il nostro filtro JWT prima del filtro di autenticazione di Spring Security
+        //  Aggiungiamo il filtro JWT prima del filtro di autenticazione standard di Spring Security
         httpSecurity.addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }
-
 }

@@ -44,7 +44,7 @@ public class AuthService {
         utente.setNome(registrazione.getNome());
         utente.setCognome(registrazione.getCognome());
         utente.setEmail(registrazione.getEmail());
-        utente.setPassword(passwordEncoder.encode(registrazione.getPassword())); // 🔐 Cripta la password
+        utente.setPassword(passwordEncoder.encode(registrazione.getPassword())); //  Cripta la password
        if(registrazione.getIsAdmin() == null || registrazione.getIsAdmin().equals(false)){
            utente.setIsAdmin(false);
        }else if(registrazione.getIsAdmin().equals(true)){
