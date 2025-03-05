@@ -70,7 +70,7 @@ public class OspedaleService {
 
     // MODIFICA GENERALE OSPEDALE (Solo Admin) - Possibilità di aggiornare immagine
     @PreAuthorize("hasRole('ADMIN')")
-    public String modificaOspedale(Long id, OspedaleDTO dto, MultipartFile imgFile) throws IOException {
+    public String modificaOspedale(Long id, OspedaleDTO dto, MultipartFile imgOspedale) throws IOException {
         Ospedale ospedale = ospedaleRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con ID: " + id));
 
@@ -79,8 +79,8 @@ public class OspedaleService {
         ospedale.setEmail(dto.getEmail());
 
         //  Se l'Admin carica una nuova immagine, la aggiorniamo
-        if (imgFile != null && !imgFile.isEmpty()) {
-            Map uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
+        if (imgOspedale != null && !imgOspedale.isEmpty()) {
+            Map uploadResult = cloudinary.uploader().upload(imgOspedale.getBytes(), ObjectUtils.emptyMap());
             ospedale.setImgOspedale((String) uploadResult.get("secure_url"));
         }
 

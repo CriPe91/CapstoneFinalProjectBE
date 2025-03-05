@@ -77,7 +77,7 @@ public class EventoService {
 
     //  MODIFICA EVENTO (Solo Admin) - Possibilità di aggiornare immagine
     @PreAuthorize("hasRole('ADMIN')")
-    public String modificaEvento(Long id, EventoDTO dto, MultipartFile imgFile) throws IOException {
+    public String modificaEvento(Long id, EventoDTO dto, MultipartFile imgEvento) throws IOException {
         Evento evento = eventoRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + id));
 
@@ -86,8 +86,8 @@ public class EventoService {
         evento.setData(dto.getData());
 
         //  Se l'Admin carica una nuova immagine, la aggiorniamo
-        if (imgFile != null && !imgFile.isEmpty()) {
-            Map uploadResult = cloudinary.uploader().upload(imgFile.getBytes(), ObjectUtils.emptyMap());
+        if (imgEvento != null && !imgEvento.isEmpty()) {
+            Map uploadResult = cloudinary.uploader().upload(imgEvento.getBytes(), ObjectUtils.emptyMap());
             evento.setImgEvento((String) uploadResult.get("secure_url"));
         }
 
