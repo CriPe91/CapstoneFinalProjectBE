@@ -3,6 +3,7 @@ package com.example.CapstoneFinalProjectBE.payload;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.hibernate.validator.constraints.URL;
 
 import java.util.List;
 
@@ -20,6 +21,9 @@ public class OspedaleDTO {
     @NotNull(message = "Il campo email è obbligatorio")
     @Email
     private String email;
+
+    @URL(protocol = "https")
+    private String imgOspedale;
 
     private List<EventoDTO> eventi; // Passiamo solo gli ID degli eventi associati
 

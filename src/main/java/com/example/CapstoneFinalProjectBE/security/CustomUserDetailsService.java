@@ -17,14 +17,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // 🔐 Recuperiamo l'utente dal DB usando l'email
+        //  Recuperiamo l'utente dal DB usando l'email
         Utente user = utenteRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con email: " + email));
 
         return User.builder()
-                .username(user.getEmail()) // ✅ Email usata come identificativo
+                .username(user.getEmail()) //  Email usata come identificativo
                 .password(user.getPassword())
-                .roles(user.getIsAdmin() ? "ADMIN" : "USER") // ✅ Ruolo basato su isAdmin
+                .roles(user.getIsAdmin() ? "ADMIN" : "USER") //  Ruolo basato su isAdmin
                 .build();
     }
 

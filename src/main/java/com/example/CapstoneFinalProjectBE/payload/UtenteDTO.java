@@ -26,7 +26,7 @@ public class UtenteDTO {
     @NotNull(message = "Il campo password è obbligatorio")
     private String password;
 
-    private Boolean isAdmin; // Di default FALSE è User, TRUE è ADMIN
+    private Boolean isAdmin; // FALSE è User, TRUE è ADMIN
 
     private List<EventoDTO> eventiPrenotati;
 

@@ -1,6 +1,6 @@
 package com.example.CapstoneFinalProjectBE.security;
 
-import com.example.CapstoneFinalProjectBE.exception.CreateTokenException;
+
 import com.example.CapstoneFinalProjectBE.model.Utente;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
@@ -17,10 +17,10 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String JWTSECRET;
 
-    // ⏳ Durata del token in minuti
+    //  Durata del token in minuti
     private long scadenza = 15;
 
-    // 📌 Header e prefisso del token
+    //  Header e prefisso del token
     private final String TOKEN_HEADER = "Authorization";
     private final String TOKEN_PREFIX = "Bearer ";
 
@@ -28,7 +28,7 @@ public class JwtUtil {
     private JwtParser JWTPARSER;
 
     /**
-     * 📌 Metodo che inizializza il parser JWT dopo la creazione del bean
+     *  Metodo che inizializza il parser JWT dopo la creazione del bean
      */
     @PostConstruct
     public void init() {
@@ -36,7 +36,7 @@ public class JwtUtil {
     }
 
     /**
-     * 🔥 Metodo per generare un token JWT per un utente autenticato
+     *  Metodo per generare un token JWT per un utente autenticato
      * @param utente Oggetto `Utente` con le informazioni dell'utente
      * @return Token JWT in formato stringa
      */
@@ -45,32 +45,32 @@ public class JwtUtil {
         claims.put("isAdmin", utente.getIsAdmin()); // Salviamo il valore booleano isAdmin
         claims.put("email", utente.getEmail());
 
-        // ⏳ Impostiamo la data di scadenza del token
+        //  Impostiamo la data di scadenza del token
         Date dataScadenza = new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(scadenza));
 
-        // 🔑 Generazione del token JWT
+        //  Generazione del token JWT
         return Jwts.builder()
                 .setClaims(claims)
                 .setExpiration(dataScadenza)
-                .signWith(SignatureAlgorithm.HS256, JWTSECRET) // 🔹 Usiamo HS256 per firmare il token
+                .signWith(SignatureAlgorithm.HS256, JWTSECRET) //  Usiamo HS256 per firmare il token
                 .compact();
     }
 
     /**
-     * 🔍 Recupera il token JWT dall'header della richiesta HTTP
+     *  Recupera il token JWT dall'header della richiesta HTTP
      * @param request Richiesta HTTP
      * @return Token JWT in formato stringa (senza prefisso)
      */
     public String recuperoToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(TOKEN_HEADER);
         if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
-            return bearerToken.substring(TOKEN_PREFIX.length()); // 🔹 Rimuoviamo "Bearer " dal token
+            return bearerToken.substring(TOKEN_PREFIX.length()); //  Rimuoviamo "Bearer " dal token
         }
         return null;
     }
 
     /**
-     * 🔍 Valida il token JWT e restituisce i suoi claims
+     *  Valida il token JWT e restituisce i suoi claims
      * @param request Richiesta HTTP contenente il token
      * @return Claims estratti dal token
      */
@@ -80,7 +80,7 @@ public class JwtUtil {
     }
 
     /**
-     * ⏳ Controlla se il token è ancora valido o è scaduto
+     *  Controlla se il token è ancora valido o è scaduto
      * @param claims Claims estratti dal token JWT
      * @return `true` se il token è ancora valido, `false` se è scaduto
      */

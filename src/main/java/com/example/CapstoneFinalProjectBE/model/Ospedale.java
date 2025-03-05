@@ -24,6 +24,8 @@ public class Ospedale {
 
     private String email;
 
+    private String imgOspedale;
+
     @OneToMany(mappedBy = "ospedale")
     private List<Evento> eventi;
 }

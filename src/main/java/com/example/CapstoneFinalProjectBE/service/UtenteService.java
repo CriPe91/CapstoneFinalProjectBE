@@ -1,6 +1,5 @@
 package com.example.CapstoneFinalProjectBE.service;
 
-import com.example.CapstoneFinalProjectBE.exception.EmailDuplicateException;
 import com.example.CapstoneFinalProjectBE.model.Utente;
 import com.example.CapstoneFinalProjectBE.payload.UtenteDTO;
 import com.example.CapstoneFinalProjectBE.repository.UtenteRepository;
@@ -41,6 +40,7 @@ public class UtenteService {
         }
 
         return new PageImpl<>(listaUtentiDTO, pageable, listaUtenti.getTotalElements());
+
     }
 
     // ELIMINA UN UTENTE (SOLO ADMIN)

@@ -23,6 +23,6 @@ public class RegistrazioneRequest {
     private String password;
 
 
-    private Boolean isAdmin; // Per default l'utente non è admin
+    private Boolean isAdmin; // FALSE è User, TRUE è ADMIN
 
 }

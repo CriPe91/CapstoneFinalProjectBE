@@ -25,6 +25,8 @@ private String descrizione;
 
 private LocalDate data;
 
+private String imgEvento;
+
 @ManyToOne
 @JoinColumn(name = "ospedale_id")
 private Ospedale ospedale;
