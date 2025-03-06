@@ -2,15 +2,15 @@ package com.example.CapstoneFinalProjectBE.controller;
 
 import com.example.CapstoneFinalProjectBE.payload.EventoDTO;
 import com.example.CapstoneFinalProjectBE.service.EventoService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 
 import java.io.IOException;
 
@@ -21,11 +21,10 @@ public class EventoController {
     @Autowired
     private EventoService eventoService;
 
-    // CREAZIONE EVENTO (Solo Admin)
-    @PreAuthorize("hasRole('ADMIN')")
+    // **CREAZIONE EVENTO (Con immagine)**
     @PostMapping("/newEvento")
-    public ResponseEntity<?> creaEvento(@Valid @RequestPart("dati") EventoDTO dto,
-                                        @RequestPart("imgEvento") MultipartFile imgEvento) {
+    public ResponseEntity<?> creaEvento(@RequestPart("dati") @Validated EventoDTO dto,
+                                        @RequestPart(value = "imgEvento", required = false) MultipartFile imgEvento) {
         try {
             String messaggio = eventoService.creaEvento(dto, imgEvento);
             return new ResponseEntity<>(messaggio, HttpStatus.CREATED);
@@ -34,7 +33,7 @@ public class EventoController {
         }
     }
 
-    // OTTIENI UN EVENTO PER ID
+    // **OTTIENI UN EVENTO PER ID**
     @GetMapping("/{id}")
     public ResponseEntity<?> getEventoById(@PathVariable Long id) {
         try {
@@ -45,37 +44,25 @@ public class EventoController {
         }
     }
 
-    // OTTIENI TUTTI GLI EVENTI (Paginazione)
+    // **OTTIENI TUTTI GLI EVENTI**
     @GetMapping
     public ResponseEntity<Page<EventoDTO>> getAllEventi(Pageable pageable) {
         Page<EventoDTO> eventi = eventoService.getAllEventi(pageable);
         return new ResponseEntity<>(eventi, HttpStatus.OK);
     }
 
-    // MODIFICA EVENTO (Solo Admin)
-    @PreAuthorize("hasRole('ADMIN')")
+    // **MODIFICA EVENTO (Modifica solo i campi presenti nel JSON)**
     @PutMapping("/{id}")
-    public ResponseEntity<?> modificaEvento(@PathVariable Long id,
-                                            @Valid @RequestPart("dati") EventoDTO dto,
-                                            @RequestPart("imgEvento") MultipartFile imgEvento) {
-        try {
-            String messaggio = eventoService.modificaEvento(id, dto, imgEvento);
-            return new ResponseEntity<>(messaggio, HttpStatus.OK);
-        } catch (IOException e) {
-            return new ResponseEntity<>("Errore durante l'upload dell'immagine: " + e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<?> modificaEvento(@PathVariable Long id, @RequestBody EventoDTO dto) {
+        String messaggio = eventoService.modificaEvento(id, dto);
+        return new ResponseEntity<>(messaggio, HttpStatus.OK);
     }
 
-    // ELIMINA EVENTO (Solo Admin)
-    @PreAuthorize("hasRole('ADMIN')")
+    // **ELIMINA EVENTO**
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEvento(@PathVariable Long id) {
-        try {
-            String messaggio = eventoService.deleteEvento(id);
-            return new ResponseEntity<>(messaggio, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>("Errore: " + e.getMessage(), HttpStatus.NOT_FOUND);
-        }
+        String messaggio = eventoService.deleteEvento(id);
+        return new ResponseEntity<>(messaggio, HttpStatus.OK);
     }
 
 }
