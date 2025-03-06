@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,12 +32,11 @@ public class OspedaleService {
     @Autowired
     private Cloudinary cloudinary;
 
-    //  CREAZIONE OSPEDALE (Solo Admin) con upload immagine su Cloudinary
-    @PreAuthorize("hasRole('ADMIN')")
+    // CREAZIONE OSPEDALE (Con supporto immagine)
     public String creaOspedale(OspedaleDTO dto, MultipartFile imgOspedale) throws IOException {
         Ospedale ospedale = dtoToEntity(dto);
 
-        //  Se l'Admin carica un'immagine, la carichiamo su Cloudinary
+        // Se è presente un'immagine, la carichiamo su Cloudinary
         if (imgOspedale != null && !imgOspedale.isEmpty()) {
             Map uploadResult = cloudinary.uploader().upload(imgOspedale.getBytes(), ObjectUtils.emptyMap());
             ospedale.setImgOspedale((String) uploadResult.get("secure_url"));
@@ -48,7 +46,7 @@ public class OspedaleService {
         return "Ospedale creato con ID: " + ospedale.getId();
     }
 
-    // OTTIENI UN OSPEDALE PER ID (Accesso libero)
+    // OTTIENI UN OSPEDALE PER ID (con lista eventi senza riferimenti circolari)
     public OspedaleDTO getOspedaleById(Long id) {
         Ospedale ospedale = ospedaleRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con ID: " + id));
@@ -56,7 +54,7 @@ public class OspedaleService {
         return entityToDto(ospedale);
     }
 
-    //  OTTIENI TUTTI GLI OSPEDALI (Accesso libero)
+    // OTTIENI TUTTI GLI OSPEDALI (con eventi senza riferimenti circolari)
     public Page<OspedaleDTO> getAllOspedali(Pageable pageable) {
         Page<Ospedale> listaOspedali = ospedaleRepo.findAll(pageable);
         List<OspedaleDTO> listaOspedaliDTO = new ArrayList<>();
@@ -68,28 +66,21 @@ public class OspedaleService {
         return new PageImpl<>(listaOspedaliDTO, pageable, listaOspedali.getTotalElements());
     }
 
-    // MODIFICA GENERALE OSPEDALE (Solo Admin) - Possibilità di aggiornare immagine
-    @PreAuthorize("hasRole('ADMIN')")
-    public String modificaOspedale(Long id, OspedaleDTO dto, MultipartFile imgOspedale) throws IOException {
+    // MODIFICA OSPEDALE (Modifica solo i campi inviati nel JSON)
+    public String modificaOspedale(Long id, OspedaleDTO dto) {
         Ospedale ospedale = ospedaleRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con ID: " + id));
 
-        ospedale.setNome(dto.getNome());
-        ospedale.setIndirizzo(dto.getIndirizzo());
-        ospedale.setEmail(dto.getEmail());
-
-        //  Se l'Admin carica una nuova immagine, la aggiorniamo
-        if (imgOspedale != null && !imgOspedale.isEmpty()) {
-            Map uploadResult = cloudinary.uploader().upload(imgOspedale.getBytes(), ObjectUtils.emptyMap());
-            ospedale.setImgOspedale((String) uploadResult.get("secure_url"));
-        }
+        // Modifica solo i campi presenti nel DTO
+        if (dto.getNome() != null) ospedale.setNome(dto.getNome());
+        if (dto.getIndirizzo() != null) ospedale.setIndirizzo(dto.getIndirizzo());
+        if (dto.getEmail() != null) ospedale.setEmail(dto.getEmail());
 
         ospedaleRepo.save(ospedale);
         return "Ospedale con ID: " + id + " modificato con successo.";
     }
 
-    //  ELIMINA OSPEDALE (Solo Admin)
-    @PreAuthorize("hasRole('ADMIN')")
+    // ELIMINA OSPEDALE
     public String deleteOspedale(Long id) {
         Ospedale ospedale = ospedaleRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con ID: " + id));
@@ -98,7 +89,7 @@ public class OspedaleService {
         return "Ospedale con ID: " + id + " eliminato con successo.";
     }
 
-    //  TRAVASO DTO → ENTITY
+    // TRAVASO DTO → ENTITY
     private Ospedale dtoToEntity(OspedaleDTO dto) {
         Ospedale ospedale = new Ospedale();
         ospedale.setNome(dto.getNome());
@@ -108,7 +99,7 @@ public class OspedaleService {
         return ospedale;
     }
 
-    //  TRAVASO ENTITY → DTO (con lista di eventi SENZA riferimenti all'ospedale per evitare loop)
+    // TRAVASO ENTITY → DTO (con lista di eventi SENZA riferimenti all'ospedale per evitare loop)
     private OspedaleDTO entityToDto(Ospedale ospedale) {
         OspedaleDTO dto = new OspedaleDTO();
         dto.setId(ospedale.getId());
@@ -117,7 +108,7 @@ public class OspedaleService {
         dto.setEmail(ospedale.getEmail());
         dto.setImgOspedale(ospedale.getImgOspedale());
 
-        //  Passiamo la lista degli eventi SENZA l'ospedale per evitare ricorsione infinita
+        // Passiamo la lista degli eventi SENZA l'ospedale per evitare ricorsione infinita
         List<EventoDTO> eventiDTO = new ArrayList<>();
         if (ospedale.getEventi() != null) {
             for (Evento evento : ospedale.getEventi()) {

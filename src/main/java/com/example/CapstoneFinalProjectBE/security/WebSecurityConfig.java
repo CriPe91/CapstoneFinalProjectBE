@@ -21,9 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class WebSecurityConfig {
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;
-
-    @Autowired
     private JwtAuthorizationFilter jwtAuthorizationFilter;
 
     /**
@@ -61,15 +58,15 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/eventi/**").permitAll()
 
                 //  Solo gli admin possono creare, modificare o eliminare ospedali ed eventi
-                .requestMatchers(HttpMethod.POST, "/ospedali/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/ospedali/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/ospedali/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/eventi/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/eventi/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/eventi/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/ospedali/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/ospedali/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/ospedali/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/eventi/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/eventi/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/eventi/**").hasAuthority("ROLE_ADMIN")
 
                 //  Solo utenti autenticati possono prenotarsi agli eventi
-                .requestMatchers(HttpMethod.POST, "/eventi/prenotazione/**").hasRole("USER")
+                .requestMatchers(HttpMethod.POST, "/eventi/prenotazione/**").hasAuthority("ROLE_USER")
 
                 //  Qualsiasi altra richiesta richiede autenticazione
                 .anyRequest().authenticated()

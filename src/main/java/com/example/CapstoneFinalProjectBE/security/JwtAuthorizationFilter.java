@@ -27,46 +27,60 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
-            // Controllo se la richiesta riguarda la registrazione o il login (non richiedono token)
+            // Ignora il filtro per le richieste di registrazione e login
             String path = request.getServletPath();
             if (path.equals("/user/register") || path.equals("/user/login")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Recupero il token dalla richiesta
+            // Recupera il token dalla richiesta
             String token = jwtUtil.recuperoToken(request);
             if (token == null || token.isEmpty()) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
+            // Decodifica e valida il token
             Claims claims = jwtUtil.validaClaims(request);
+            System.out.println("Claims estratti dal JWT: " + claims);
 
-            // Controlliamo la validità del token
+            // Controlla la validità del token
             if (claims != null && jwtUtil.checkExpiration(claims)) {
-                boolean isAdmin = (boolean) claims.get("isAdmin");
+                // Leggiamo il ruolo dal token
+                String ruolo = claims.get("roles", String.class);
 
-                //  Assegniamo il ruolo corretto in base a isAdmin
-                List<SimpleGrantedAuthority> ruoli = List.of(new SimpleGrantedAuthority(isAdmin ? "ROLE_ADMIN" : "ROLE_USER"));
+                // Se il ruolo è nullo, assegniamo "ROLE_USER" di default
+                if (ruolo == null) {
+                    ruolo = "ROLE_USER";
+                }
 
-                // Creiamo il token di autenticazione
+                // Debug per vedere il ruolo assegnato
+                System.out.println("Ruolo assegnato a Spring Security: " + ruolo);
+
+                // Creiamo la lista di autorizzazioni per Spring Security
+                List<SimpleGrantedAuthority> ruoli = List.of(new SimpleGrantedAuthority(ruolo));
+
+                // Creiamo il token di autenticazione con email e ruoli
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(claims.get("email"), "", ruoli);
 
+                // Impostiamo l'autenticazione nel Security Context
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
 
         } catch (Exception e) {
-            // Se il token è invalido o mancante, gestiamo l'errore
+            // Se il token è invalido, restituiamo errore con messaggio dettagliato
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             Map<String, Object> errorDetails = new HashMap<>();
             errorDetails.put("message", "Autenticazione negata");
             errorDetails.put("details", e.getMessage());
             new ObjectMapper().writeValue(response.getWriter(), errorDetails);
+            return;
         }
 
+        // Continua con il filtro successivo
         filterChain.doFilter(request, response);
     }
 }
