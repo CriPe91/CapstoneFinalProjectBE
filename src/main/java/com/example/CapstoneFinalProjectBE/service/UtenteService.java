@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,16 +20,20 @@ public class UtenteService {
     @Autowired
     private UtenteRepository utenteRepo;
 
-    // OTTIENI UN UTENTE PER ID (SOLO ADMIN)
-    @PreAuthorize("hasRole('ADMIN')") // Solo gli Admin possono cercare utenti per ID
+    // **NUOVO METODO: Ottiene un Utente per ID (ritorna l'entità originale)**
+    public Utente findUtenteById(Long id) {
+        return utenteRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato con ID: " + id));
+    }
+
+    // OTTIENI UN UTENTE PER ID (restituisce DTO)
     public UtenteDTO getUtenteById(Long id) {
         Utente utente = utenteRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato con ID: " + id));
         return entityToDto(utente);
     }
 
-    // OTTIENI TUTTI GLI UTENTI CON PAGINAZIONE (SOLO ADMIN)
-    @PreAuthorize("hasRole('ADMIN')") // Solo gli Admin possono visualizzare tutti gli utenti
+    // OTTIENI TUTTI GLI UTENTI CON PAGINAZIONE
     public Page<UtenteDTO> getAllUtenti(Pageable pageable) {
         Page<Utente> listaUtenti = utenteRepo.findAll(pageable);
         List<UtenteDTO> listaUtentiDTO = new ArrayList<>();
@@ -40,11 +43,9 @@ public class UtenteService {
         }
 
         return new PageImpl<>(listaUtentiDTO, pageable, listaUtenti.getTotalElements());
-
     }
 
-    // ELIMINA UN UTENTE (SOLO ADMIN)
-    @PreAuthorize("hasRole('ADMIN')") // Solo gli Admin possono eliminare utenti
+    // ELIMINA UN UTENTE
     public String deleteUtente(Long id) {
         Utente utente = utenteRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato con ID: " + id));

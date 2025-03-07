@@ -1,7 +1,9 @@
 package com.example.CapstoneFinalProjectBE.controller;
 
+import com.example.CapstoneFinalProjectBE.model.Utente;
 import com.example.CapstoneFinalProjectBE.payload.EventoDTO;
 import com.example.CapstoneFinalProjectBE.service.EventoService;
+import com.example.CapstoneFinalProjectBE.service.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +23,10 @@ public class EventoController {
     @Autowired
     private EventoService eventoService;
 
-    // **CREAZIONE EVENTO (Con immagine)**
+    @Autowired
+    private UtenteService utenteService;
+
+    // CREAZIONE EVENTO (Con immagine)
     @PostMapping("/newEvento")
     public ResponseEntity<?> creaEvento(@RequestPart("dati") @Validated EventoDTO dto,
                                         @RequestPart(value = "imgEvento", required = false) MultipartFile imgEvento) {
@@ -33,7 +38,7 @@ public class EventoController {
         }
     }
 
-    // **OTTIENI UN EVENTO PER ID**
+    // OTTIENI UN EVENTO PER ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getEventoById(@PathVariable Long id) {
         try {
@@ -44,25 +49,51 @@ public class EventoController {
         }
     }
 
-    // **OTTIENI TUTTI GLI EVENTI**
+    // OTTIENI TUTTI GLI EVENTI
     @GetMapping
     public ResponseEntity<Page<EventoDTO>> getAllEventi(Pageable pageable) {
         Page<EventoDTO> eventi = eventoService.getAllEventi(pageable);
         return new ResponseEntity<>(eventi, HttpStatus.OK);
     }
 
-    // **MODIFICA EVENTO (Modifica solo i campi presenti nel JSON)**
+    // MODIFICA EVENTO (Modifica solo i campi presenti nel JSON)
     @PutMapping("/{id}")
     public ResponseEntity<?> modificaEvento(@PathVariable Long id, @RequestBody EventoDTO dto) {
         String messaggio = eventoService.modificaEvento(id, dto);
         return new ResponseEntity<>(messaggio, HttpStatus.OK);
     }
 
-    // **ELIMINA EVENTO**
+    // ELIMINA EVENTO
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEvento(@PathVariable Long id) {
         String messaggio = eventoService.deleteEvento(id);
         return new ResponseEntity<>(messaggio, HttpStatus.OK);
     }
 
+    // PRENOTAZIONE UTENTE AD UN EVENTO (Solo utenti normali, no admin)
+    @PostMapping("/{eventoId}/prenota/{utenteId}")
+    public ResponseEntity<?> prenotaUtente(@PathVariable Long eventoId, @PathVariable Long utenteId) {
+        // Recupera l'utente dal database
+        Utente utente = utenteService.findUtenteById(utenteId); // FIX , ABBIAMO IL METODO IN UTENTE SERVICE
+
+        if (utente == null) {
+            return new ResponseEntity<>("Utente non trovato", HttpStatus.NOT_FOUND);
+        }
+
+        // Verifica che non sia un admin
+        if (utente.getIsAdmin()) {
+            return new ResponseEntity<>("Gli admin non possono prenotarsi agli eventi", HttpStatus.FORBIDDEN);
+        }
+
+        // Effettua la prenotazione
+        String messaggio = eventoService.prenotaUtente(eventoId, utenteId);
+        return new ResponseEntity<>(messaggio, HttpStatus.OK);
+    }
+
+    // OTTENERE GLI EVENTI A CUI L'UTENTE È PRENOTATO
+    @GetMapping("/prenotati/{utenteId}")
+    public ResponseEntity<Page<EventoDTO>> getEventiPrenotati(@PathVariable Long utenteId, Pageable pageable) {
+        Page<EventoDTO> eventi = eventoService.getEventiPrenotati(utenteId, pageable);
+        return new ResponseEntity<>(eventi, HttpStatus.OK);
+    }
 }

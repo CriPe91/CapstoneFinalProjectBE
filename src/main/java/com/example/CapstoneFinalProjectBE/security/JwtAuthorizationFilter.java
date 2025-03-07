@@ -25,7 +25,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         try {
             // Ignora il filtro per le richieste di registrazione e login
             String path = request.getServletPath();
@@ -45,13 +46,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             Claims claims = jwtUtil.validaClaims(request);
             System.out.println("Claims estratti dal JWT: " + claims);
 
-            // Controlla la validità del token
+            //  Controllo dei ruoli
             if (claims != null && jwtUtil.checkExpiration(claims)) {
-                // Leggiamo il ruolo dal token
+                // Controlla se il claim "roles" è presente
                 String ruolo = claims.get("roles", String.class);
 
-                // Se il ruolo è nullo, assegniamo "ROLE_USER" di default
-                if (ruolo == null) {
+                // Se il ruolo non è specificato o non è valido, assegniamo "ROLE_USER" di default
+                if (ruolo == null || (!ruolo.equals("ROLE_USER") && !ruolo.equals("ROLE_ADMIN"))) {
                     ruolo = "ROLE_USER";
                 }
 
@@ -61,12 +62,15 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 // Creiamo la lista di autorizzazioni per Spring Security
                 List<SimpleGrantedAuthority> ruoli = List.of(new SimpleGrantedAuthority(ruolo));
 
+
                 // Creiamo il token di autenticazione con email e ruoli
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(claims.get("email"), "", ruoli);
 
+
                 // Impostiamo l'autenticazione nel Security Context
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
             }
 
         } catch (Exception e) {
