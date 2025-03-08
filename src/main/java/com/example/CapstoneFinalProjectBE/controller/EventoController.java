@@ -1,5 +1,6 @@
 package com.example.CapstoneFinalProjectBE.controller;
 
+import com.example.CapstoneFinalProjectBE.exception.ResourceNotFoundException;
 import com.example.CapstoneFinalProjectBE.model.Utente;
 import com.example.CapstoneFinalProjectBE.payload.EventoDTO;
 import com.example.CapstoneFinalProjectBE.service.EventoService;
@@ -7,6 +8,7 @@ import com.example.CapstoneFinalProjectBE.service.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/eventi")
@@ -37,6 +41,23 @@ public class EventoController {
             return new ResponseEntity<>("Errore durante l'upload dell'immagine: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+
+
+    // CERCA EVENTO PER TITOLO DATA O ENTRAMBI CON QUERY PARAM
+    @GetMapping("/search")
+    public ResponseEntity<?> searchEventi(
+            @RequestParam(required = false) String titolo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
+        try {
+            List<EventoDTO> eventi = eventoService.findByTitoloOrData(titolo, data);
+            return ResponseEntity.ok(eventi);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 
     // OTTIENI UN EVENTO PER ID
     @GetMapping("/{id}")
@@ -95,5 +116,12 @@ public class EventoController {
     public ResponseEntity<Page<EventoDTO>> getEventiPrenotati(@PathVariable Long utenteId, Pageable pageable) {
         Page<EventoDTO> eventi = eventoService.getEventiPrenotati(utenteId, pageable);
         return new ResponseEntity<>(eventi, HttpStatus.OK);
+    }
+
+    // ANNULLARE UNA PRENOTAZIONE AD UN EVENTO
+    @DeleteMapping("/{eventoId}/annulla/{utenteId}")
+    public ResponseEntity<?> cancellaPrenotazione(@PathVariable Long eventoId, @PathVariable Long utenteId) {
+        String messaggio = eventoService.cancellaPrenotazione(eventoId, utenteId);
+        return new ResponseEntity<>(messaggio, HttpStatus.OK);
     }
 }

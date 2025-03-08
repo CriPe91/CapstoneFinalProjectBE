@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,28 @@ public class EventoService {
         return "Utente con ID " + utenteId + " prenotato con successo all'evento con ID " + eventoId;
     }
 
+    // ANNULLARE UNA PRENOTAZIONE
+    public String cancellaPrenotazione(Long eventoId, Long utenteId) {
+        // Controlla se l'evento esiste
+        Evento evento = eventoRepo.findById(eventoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + eventoId));
+
+        // Controlla se l'utente esiste
+        Utente utente = utenteRepo.findById(utenteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato con ID: " + utenteId));
+
+        // Controlla se l'utente è già prenotato all'evento
+        if (!evento.getUtenti().contains(utente)) {
+            return "L'utente con ID " + utenteId + " non è prenotato a questo evento.";
+        }
+
+        // Rimuove l'utente dalla lista dei prenotati
+        evento.getUtenti().remove(utente);
+        eventoRepo.save(evento);
+
+        return "Prenotazione annullata con successo per l'utente con ID " + utenteId + " dall'evento con ID " + eventoId;
+    }
+
     // OTTENERE UN EVENTO PER ID
     public EventoDTO getEventoById(Long id) {
         Evento evento = eventoRepo.findById(id)
@@ -117,6 +140,29 @@ public class EventoService {
         }
 
         return new PageImpl<>(listaEventiDTO, pageable, listaEventiDTO.size());
+    }
+
+
+    // CERCA EVENTO PER TITOLO DATA O ENTRAMBI
+    public List<EventoDTO> findByTitoloOrData(String titolo, LocalDate data) {
+        List<Evento> eventi;
+
+        if (titolo != null && data != null) {
+            eventi = eventoRepo.findByTitoloContainingAndData(titolo, data);
+        } else if (titolo != null) {
+            eventi = eventoRepo.findByTitoloContaining(titolo);
+        } else if (data != null) {
+            eventi = eventoRepo.findByData(data);
+        } else {
+            throw new IllegalArgumentException("Devi specificare almeno un parametro di ricerca (titolo o data).");
+        }
+
+        // Se la lista è vuota, restituiamo un errore personalizzato
+        if (eventi.isEmpty()) {
+            throw new ResourceNotFoundException("Nessun evento trovato con Titolo: '" + titolo + "' e Data: '" + data + "'");
+        }
+
+        return eventi.stream().map(this::entityToDto).toList();
     }
 
     // MODIFICA EVENTO (Modifica solo i campi inviati)

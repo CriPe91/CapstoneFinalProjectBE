@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 @Service
@@ -46,7 +47,13 @@ public class OspedaleService {
         return "Ospedale creato con ID: " + ospedale.getId();
     }
 
-    // OTTIENI UN OSPEDALE PER ID (con lista eventi senza riferimenti circolari)
+    public OspedaleDTO findByNome(String nome) {
+        Optional<Ospedale> ospedale = ospedaleRepo.findByNome(nome);
+        return ospedale.map(this::entityToDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con nome: " + nome));
+    }
+
+    // OTTIENI UN OSPEDALE PER ID (con lista eventi senza riferimenti)
     public OspedaleDTO getOspedaleById(Long id) {
         Ospedale ospedale = ospedaleRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con ID: " + id));
@@ -54,7 +61,7 @@ public class OspedaleService {
         return entityToDto(ospedale);
     }
 
-    // OTTIENI TUTTI GLI OSPEDALI (con eventi senza riferimenti circolari)
+    // OTTIENI TUTTI GLI OSPEDALI (con eventi senza riferimenti)
     public Page<OspedaleDTO> getAllOspedali(Pageable pageable) {
         Page<Ospedale> listaOspedali = ospedaleRepo.findAll(pageable);
         List<OspedaleDTO> listaOspedaliDTO = new ArrayList<>();

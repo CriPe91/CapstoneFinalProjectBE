@@ -32,6 +32,13 @@ public class OspedaleController {
         }
     }
 
+
+    // CERCA OSPEDALE PER NOME CON QUERY PARAM
+    @GetMapping("/search")
+    public ResponseEntity<OspedaleDTO> getOspedaleByNome(@RequestParam String nome) {
+        return ResponseEntity.ok(ospedaleService.findByNome(nome));
+    }
+
     // OTTIENI UN OSPEDALE PER ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getOspedaleById(@PathVariable Long id) {

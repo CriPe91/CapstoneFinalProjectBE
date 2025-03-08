@@ -57,8 +57,17 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/ospedali/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/eventi/**").permitAll()
 
-                //  Solo utenti autenticati possono prenotarsi agli eventi
+
+                // RICERCA PER QUERY PARAMS
+                .requestMatchers(HttpMethod.GET, "/ospedali/search").permitAll()
+                // RICERCA PER QUERY PARAMS
+                .requestMatchers(HttpMethod.GET, "/eventi/search").permitAll()
+
+
+                //  Solo utenti autenticati possono prenotarsi e cancellarsi agli eventi
                 .requestMatchers(HttpMethod.POST, "/eventi/*/prenota/*").hasAuthority("ROLE_USER")
+                .requestMatchers(HttpMethod.DELETE, "/eventi/*/annulla/*").hasAuthority("ROLE_USER")
+
                 //  Utenti che vedono le loro prenotazioni
                 .requestMatchers(HttpMethod.GET, "/eventi/prenotati/{utenteId}").hasAuthority("ROLE_USER")
 
