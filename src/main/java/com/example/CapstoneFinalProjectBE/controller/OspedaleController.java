@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/ospedali")
@@ -39,6 +40,12 @@ public class OspedaleController {
         return ResponseEntity.ok(ospedaleService.findByNome(nome));
     }
 
+    // CERCA TUTTI GLI OSPEDALI SENZA EVENTI AL SUO INTERNO
+    @GetMapping("/withoutEventi")
+    public ResponseEntity<List<OspedaleDTO>> getOspedaliWithoutEventi() {
+        return ResponseEntity.ok(ospedaleService.findAllOspedaliWithoutEventi());
+    }
+
     // OTTIENI UN OSPEDALE PER ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getOspedaleById(@PathVariable Long id) {
@@ -50,7 +57,7 @@ public class OspedaleController {
         }
     }
 
-    // OTTIENI TUTTI GLI OSPEDALI
+    // OTTIENI TUTTI GLI OSPEDALI CON EVENTO AL SUO INTERNO
     @GetMapping
     public ResponseEntity<Page<OspedaleDTO>> getAllOspedali(Pageable pageable) {
         Page<OspedaleDTO> ospedali = ospedaleService.getAllOspedali(pageable);

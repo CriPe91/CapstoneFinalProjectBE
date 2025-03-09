@@ -47,11 +47,34 @@ public class OspedaleService {
         return "Ospedale creato con ID: " + ospedale.getId();
     }
 
+    // CERCA OSPEDALE PER NOME CON LISTA DI EVENTI ALL INTERNO
     public OspedaleDTO findByNome(String nome) {
         Optional<Ospedale> ospedale = ospedaleRepo.findByNome(nome);
         return ospedale.map(this::entityToDto)
                 .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con nome: " + nome));
     }
+
+
+    // CERCA TUTTI GLI OSPEDALI SENZA LA LISTA DI EVENTI ALL INTERNO
+    public List<OspedaleDTO> findAllOspedaliWithoutEventi() {
+        List<Ospedale> ospedali = ospedaleRepo.findAll();
+
+        return ospedali.stream()
+                .map(this::entityToDtoSenzaEventi) // Metodo che esclude gli eventi
+                .toList();
+    }
+
+    // Metodo per convertire Ospedale → OspedaleDTO senza il campo "eventi"
+    private OspedaleDTO entityToDtoSenzaEventi(Ospedale ospedale) {
+        OspedaleDTO dto = new OspedaleDTO();
+        dto.setId(ospedale.getId());
+        dto.setNome(ospedale.getNome());
+        dto.setIndirizzo(ospedale.getIndirizzo());
+        dto.setEmail(ospedale.getEmail());
+        dto.setImgOspedale(ospedale.getImgOspedale());
+        return dto; // Nessun setEventi(), quindi "eventi" non viene mai incluso
+    }
+
 
     // OTTIENI UN OSPEDALE PER ID (con lista eventi senza riferimenti)
     public OspedaleDTO getOspedaleById(Long id) {

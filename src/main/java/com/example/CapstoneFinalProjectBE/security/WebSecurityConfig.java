@@ -55,6 +55,9 @@ public class WebSecurityConfig {
 
                 //  Permettiamo a tutti di visualizzare gli ospedali e gli eventi
                 .requestMatchers(HttpMethod.GET, "/ospedali/**").permitAll()
+                //  Ospedali senza Eventi al suo interno
+                .requestMatchers(HttpMethod.GET, "/ospedali/withoutEventi").permitAll()
+
                 .requestMatchers(HttpMethod.GET, "/eventi/**").permitAll()
 
 

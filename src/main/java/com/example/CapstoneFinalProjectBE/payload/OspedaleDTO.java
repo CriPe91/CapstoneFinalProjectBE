@@ -1,13 +1,17 @@
 package com.example.CapstoneFinalProjectBE.payload;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.URL;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor  // Aggiunto per evitare errori nei travasi
+@JsonInclude(JsonInclude.Include.NON_NULL) // Esclude i campi nulli dal JSON
 public class OspedaleDTO {
 
     private long id;
@@ -25,6 +29,7 @@ public class OspedaleDTO {
     @URL(protocol = "https")
     private String imgOspedale;
 
-    private List<EventoDTO> eventi; // Passiamo solo gli ID degli eventi associati
+    private List<EventoDTO> eventi; // Se null, verrà escluso dal JSON
+
 
 }
