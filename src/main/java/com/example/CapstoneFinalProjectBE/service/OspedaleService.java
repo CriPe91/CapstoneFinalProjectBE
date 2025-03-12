@@ -55,26 +55,6 @@ public class OspedaleService {
     }
 
 
-    // CERCA TUTTI GLI OSPEDALI SENZA LA LISTA DI EVENTI ALL INTERNO
-    public List<OspedaleDTO> findAllOspedaliWithoutEventi() {
-        List<Ospedale> ospedali = ospedaleRepo.findAll();
-
-        return ospedali.stream()
-                .map(this::entityToDtoSenzaEventi) // Metodo che esclude gli eventi
-                .toList();
-    }
-
-    // Metodo per convertire Ospedale → OspedaleDTO senza il campo "eventi"
-    private OspedaleDTO entityToDtoSenzaEventi(Ospedale ospedale) {
-        OspedaleDTO dto = new OspedaleDTO();
-        dto.setId(ospedale.getId());
-        dto.setNome(ospedale.getNome());
-        dto.setIndirizzo(ospedale.getIndirizzo());
-        dto.setEmail(ospedale.getEmail());
-        dto.setImgOspedale(ospedale.getImgOspedale());
-        return dto; // Nessun setEventi(), quindi "eventi" non viene mai incluso
-    }
-
 
     // OTTIENI UN OSPEDALE PER ID (con lista eventi senza riferimenti)
     public OspedaleDTO getOspedaleById(Long id) {
@@ -84,16 +64,16 @@ public class OspedaleService {
         return entityToDto(ospedale);
     }
 
-    // OTTIENI TUTTI GLI OSPEDALI (con eventi senza riferimenti)
-    public Page<OspedaleDTO> getAllOspedali(Pageable pageable) {
-        Page<Ospedale> listaOspedali = ospedaleRepo.findAll(pageable);
+    // CERCA TUTTI GLI OSPEDALI SENZA LA LISTA DI EVENTI ALL INTERNO
+    public List<OspedaleDTO> getAllOspedali() {
+        List<Ospedale> listaOspedali = ospedaleRepo.findAll();
         List<OspedaleDTO> listaOspedaliDTO = new ArrayList<>();
 
-        for (Ospedale ospedale : listaOspedali.getContent()) {
-            listaOspedaliDTO.add(entityToDto(ospedale));
+        for (Ospedale ospedale : listaOspedali) {
+            listaOspedaliDTO.add(entityToDtoSenzaEventi(ospedale));  // TRAVASO DIRETTO SENZA EVENTI
         }
 
-        return new PageImpl<>(listaOspedaliDTO, pageable, listaOspedali.getTotalElements());
+        return listaOspedaliDTO;
     }
 
     // MODIFICA OSPEDALE (Modifica solo i campi inviati nel JSON)
@@ -153,6 +133,17 @@ public class OspedaleService {
         }
         dto.setEventi(eventiDTO);
 
+        return dto;
+    }
+
+    // TRAVASO ENTITY → DTO SENZA EVENTI
+    private OspedaleDTO entityToDtoSenzaEventi(Ospedale ospedale) {
+        OspedaleDTO dto = new OspedaleDTO();
+        dto.setId(ospedale.getId());
+        dto.setNome(ospedale.getNome());
+        dto.setIndirizzo(ospedale.getIndirizzo());
+        dto.setEmail(ospedale.getEmail());
+        dto.setImgOspedale(ospedale.getImgOspedale());
         return dto;
     }
 }

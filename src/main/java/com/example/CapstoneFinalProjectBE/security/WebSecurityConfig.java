@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
@@ -46,7 +47,14 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
         //  Disabilitiamo CORS e CSRF perché useremo JWT (stateless)
-        httpSecurity.cors(cors -> cors.disable()).csrf(csrf -> csrf.disable());
+        httpSecurity.cors(c -> c.configurationSource(cors -> {
+            CorsConfiguration config = new CorsConfiguration();
+            config.addAllowedOrigin("http://localhost:5173"); //URL del frontend
+            config.addAllowedMethod("*"); // Consente tutti i metodi
+            config.addAllowedHeader("*"); // Consente tutte le intestazioni
+            return config;
+        }));
+        httpSecurity.csrf(csrf -> csrf.disable());
 
         //  Configuriamo i permessi di accesso alle API
         httpSecurity.authorizeHttpRequests(auth -> auth
@@ -54,9 +62,8 @@ public class WebSecurityConfig {
                 .requestMatchers("/user/register", "/user/login").permitAll()
 
                 //  Permettiamo a tutti di visualizzare gli ospedali e gli eventi
+                .requestMatchers(HttpMethod.GET, "/ospedali").permitAll()
                 .requestMatchers(HttpMethod.GET, "/ospedali/**").permitAll()
-                //  Ospedali senza Eventi al suo interno
-                .requestMatchers(HttpMethod.GET, "/ospedali/withoutEventi").permitAll()
 
                 .requestMatchers(HttpMethod.GET, "/eventi/**").permitAll()
 

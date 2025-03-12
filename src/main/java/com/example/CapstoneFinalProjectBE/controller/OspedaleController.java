@@ -3,8 +3,6 @@ package com.example.CapstoneFinalProjectBE.controller;
 import com.example.CapstoneFinalProjectBE.payload.OspedaleDTO;
 import com.example.CapstoneFinalProjectBE.service.OspedaleService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -40,11 +38,6 @@ public class OspedaleController {
         return ResponseEntity.ok(ospedaleService.findByNome(nome));
     }
 
-    // CERCA TUTTI GLI OSPEDALI SENZA EVENTI AL SUO INTERNO
-    @GetMapping("/withoutEventi")
-    public ResponseEntity<List<OspedaleDTO>> getOspedaliWithoutEventi() {
-        return ResponseEntity.ok(ospedaleService.findAllOspedaliWithoutEventi());
-    }
 
     // OTTIENI UN OSPEDALE PER ID
     @GetMapping("/{id}")
@@ -57,10 +50,10 @@ public class OspedaleController {
         }
     }
 
-    // OTTIENI TUTTI GLI OSPEDALI CON EVENTO AL SUO INTERNO
+    // OTTIENI TUTTI GLI OSPEDALI SENZA EVENTI
     @GetMapping
-    public ResponseEntity<Page<OspedaleDTO>> getAllOspedali(Pageable pageable) {
-        Page<OspedaleDTO> ospedali = ospedaleService.getAllOspedali(pageable);
+    public ResponseEntity<List<OspedaleDTO>> getAllOspedali() {
+        List<OspedaleDTO> ospedali = ospedaleService.getAllOspedali();
         return new ResponseEntity<>(ospedali, HttpStatus.OK);
     }
 
