@@ -3,9 +3,14 @@ package com.example.CapstoneFinalProjectBE.controller;
 import com.example.CapstoneFinalProjectBE.payload.UtenteDTO;
 import com.example.CapstoneFinalProjectBE.payload.request.LoginRequest;
 import com.example.CapstoneFinalProjectBE.payload.request.RegistrazioneRequest;
+import com.example.CapstoneFinalProjectBE.payload.response.ErroreResponseDTO;
 import com.example.CapstoneFinalProjectBE.payload.response.LoginResponse;
+import com.example.CapstoneFinalProjectBE.payload.response.UtenteSenzaEventiDTO;
+import com.example.CapstoneFinalProjectBE.security.JwtUtil;
 import com.example.CapstoneFinalProjectBE.security.service.AuthService;
 import com.example.CapstoneFinalProjectBE.service.UtenteService;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +30,9 @@ public class UtenteController {
 
     @Autowired
     private UtenteService utenteService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
 
     // ✅ **REGISTRAZIONE**
@@ -57,6 +65,25 @@ public class UtenteController {
             return new ResponseEntity<>("Errore: Credenziali non valide", HttpStatus.BAD_REQUEST);
         }
     }
+
+
+    //  OTTIENI I DATI DELL'UTENTE DAL TOKEN
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyUserData(HttpServletRequest request) {
+        try {
+            Claims claims = jwtUtil.validaClaims(request);
+            String email = claims.get("email", String.class);
+
+            UtenteSenzaEventiDTO response = utenteService.getUtenteByEmailSenzaEventi(email);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErroreResponseDTO("Token non valido o scaduto"), HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+
+
 
     // OTTIENI TUTTI GLI UTENTI (SOLO ADMIN)
     @GetMapping("/all")

@@ -2,6 +2,7 @@ package com.example.CapstoneFinalProjectBE.service;
 
 import com.example.CapstoneFinalProjectBE.model.Utente;
 import com.example.CapstoneFinalProjectBE.payload.UtenteDTO;
+import com.example.CapstoneFinalProjectBE.payload.response.UtenteSenzaEventiDTO;
 import com.example.CapstoneFinalProjectBE.repository.UtenteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,10 +21,24 @@ public class UtenteService {
     @Autowired
     private UtenteRepository utenteRepo;
 
-    // **NUOVO METODO: Ottiene un Utente per ID (ritorna l'entità originale)**
+    // NUOVO METODO: Ottiene un Utente per ID (ritorna l'entità originale)
     public Utente findUtenteById(Long id) {
         return utenteRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato con ID: " + id));
+    }
+
+
+    // CERCA UN UTENTE PER EMAIL (usato nella chiamata GET /user/me)  // PER IL FRONT-END TORNA L UTENTE AUTENTICATO
+    public UtenteSenzaEventiDTO getUtenteByEmailSenzaEventi(String email) {
+        Utente utente = utenteRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato con email: " + email));
+        return new UtenteSenzaEventiDTO(
+                utente.getId(),
+                utente.getNome(),
+                utente.getCognome(),
+                utente.getEmail(),
+                utente.getIsAdmin()
+        );
     }
 
     // OTTIENI UN UTENTE PER ID (restituisce DTO)
@@ -63,5 +78,6 @@ public class UtenteService {
         dto.setIsAdmin(utente.getIsAdmin());
         return dto;
     }
+
 }
 

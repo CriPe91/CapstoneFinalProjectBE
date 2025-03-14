@@ -89,6 +89,8 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/eventi/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/eventi/**").hasAuthority("ROLE_ADMIN")
 
+                // Chiamata per ottenere i dati dell'utente autenticato
+                .requestMatchers(HttpMethod.GET, "/user/me").authenticated()
 
                 //  Qualsiasi altra richiesta richiede autenticazione
                 .anyRequest().authenticated()
