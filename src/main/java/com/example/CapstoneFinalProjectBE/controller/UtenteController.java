@@ -1,5 +1,6 @@
 package com.example.CapstoneFinalProjectBE.controller;
 
+import com.example.CapstoneFinalProjectBE.model.Utente;
 import com.example.CapstoneFinalProjectBE.payload.UtenteDTO;
 import com.example.CapstoneFinalProjectBE.payload.request.LoginRequest;
 import com.example.CapstoneFinalProjectBE.payload.request.RegistrazioneRequest;
@@ -21,6 +22,8 @@ import org.springframework.validation.ObjectError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+
 @RestController
 @RequestMapping("/user")
 public class UtenteController {
@@ -37,9 +40,19 @@ public class UtenteController {
 
     // ✅ **REGISTRAZIONE**
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegistrazioneRequest registrazione) {
-        String response = authService.register(registrazione);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    public ResponseEntity<?> register(@RequestBody RegistrazioneRequest registrazione) {
+        try {
+            // Esegui la registrazione tramite il service
+            Utente nuovoUtente = authService.registerAndReturnUser(registrazione); // Restituiamo l'oggetto Utente
+
+            // Genera il token JWT per il nuovo utente
+            String token = jwtUtil.creaToken(nuovoUtente);
+
+            // Restituiamo il token in un JSON
+            return ResponseEntity.ok(Collections.singletonMap("token", token));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Errore nella registrazione: " + e.getMessage());
+        }
     }
 
     // ✅ **LOGIN**

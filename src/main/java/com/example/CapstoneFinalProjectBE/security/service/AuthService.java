@@ -55,6 +55,22 @@ public class AuthService {
         return "Registrazione completata con successo! ID Utente: " + id;
     }
 
+    // ✅ NUOVO METODO: REGISTRA UTENTE E RESTITUISCE L'OGGETTO UTENTE CON TOKEN PER IL FE
+    public Utente registerAndReturnUser(RegistrazioneRequest registrazione) {
+        if (utenteRepo.existsByEmail(registrazione.getEmail())) {
+            throw new EmailDuplicateException("Errore: L'email è già registrata!");
+        }
+
+        Utente utente = new Utente();
+        utente.setNome(registrazione.getNome());
+        utente.setCognome(registrazione.getCognome());
+        utente.setEmail(registrazione.getEmail());
+        utente.setPassword(passwordEncoder.encode(registrazione.getPassword())); // Cripta la password
+        utente.setIsAdmin(registrazione.getIsAdmin() != null && registrazione.getIsAdmin());
+
+        return utenteRepo.save(utente); // Ora ritorniamo l'utente appena registrato
+    }
+
     // ✅ LOGIN UTENTE
     public LoginResponse login(String email, String password) {
         try {
