@@ -4,6 +4,7 @@ import com.example.CapstoneFinalProjectBE.exception.ResourceNotFoundException;
 import com.example.CapstoneFinalProjectBE.model.Utente;
 import com.example.CapstoneFinalProjectBE.payload.EventoDTO;
 import com.example.CapstoneFinalProjectBE.payload.response.ErroreResponseDTO;
+import com.example.CapstoneFinalProjectBE.payload.response.UtenteSenzaEventiDTO;
 import com.example.CapstoneFinalProjectBE.service.EventoService;
 import com.example.CapstoneFinalProjectBE.service.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,6 +112,13 @@ public class EventoController {
         // Effettua la prenotazione e ottiene il JSON
         Map<String, Object> response = eventoService.prenotaUtente(eventoId, utenteId);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // OTTIENI LA LISTA DI UTENTI PRENOTATI A UN EVENTO (Solo utenti autenticati)
+    @GetMapping("/{idEvento}/prenotati")
+    public ResponseEntity<List<UtenteSenzaEventiDTO>> getUtentiPrenotati(@PathVariable Long idEvento) {
+        List<UtenteSenzaEventiDTO> utentiPrenotati = eventoService.getUtentiPrenotati(idEvento);
+        return ResponseEntity.ok(utentiPrenotati);
     }
 
     // OTTENERE GLI EVENTI A CUI L'UTENTE È PRENOTATO

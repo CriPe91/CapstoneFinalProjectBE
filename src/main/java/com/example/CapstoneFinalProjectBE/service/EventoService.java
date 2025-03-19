@@ -8,6 +8,8 @@ import com.example.CapstoneFinalProjectBE.model.Ospedale;
 import com.example.CapstoneFinalProjectBE.model.Utente;
 import com.example.CapstoneFinalProjectBE.payload.EventoDTO;
 import com.example.CapstoneFinalProjectBE.payload.OspedaleDTO;
+import com.example.CapstoneFinalProjectBE.payload.UtenteDTO;
+import com.example.CapstoneFinalProjectBE.payload.response.UtenteSenzaEventiDTO;
 import com.example.CapstoneFinalProjectBE.repository.EventoRepository;
 import com.example.CapstoneFinalProjectBE.repository.OspedaleRepository;
 import com.example.CapstoneFinalProjectBE.repository.UtenteRepository;
@@ -42,6 +44,9 @@ public class EventoService {
 
     @Autowired
     private UtenteRepository utenteRepo;
+
+    @Autowired
+    private UtenteService utenteService;
 
     // CREAZIONE EVENTO (Con immagine)
     public EventoDTO creaEvento(EventoDTO dto, MultipartFile imgEvento) throws IOException {
@@ -89,6 +94,20 @@ public class EventoService {
         response.put("message", "Utente prenotato con successo!");
         response.put("evento", entityToDto(evento));
         return response;
+    }
+
+    // OTTIENI LA LISTA DI UTENTI PRENOTATI A UN EVENTO
+    public List<UtenteSenzaEventiDTO> getUtentiPrenotati(Long idEvento) {
+        Evento evento = eventoRepo.findById(idEvento)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + idEvento));
+
+        List<UtenteSenzaEventiDTO> utentiPrenotatiDTO = new ArrayList<>();
+
+        for (Utente utente : evento.getUtenti()) {
+            utentiPrenotatiDTO.add(utenteService.entityToDtoSenzaEventi(utente));
+        }
+
+        return utentiPrenotatiDTO;
     }
 
     // ANNULLARE UNA PRENOTAZIONE

@@ -79,5 +79,17 @@ public class UtenteService {
         return dto;
     }
 
+    // TRAVASO ENTITY → DTO SENZA EVENTI
+    public UtenteSenzaEventiDTO entityToDtoSenzaEventi(Utente utente) {
+        return new UtenteSenzaEventiDTO(
+                utente.getId(),
+                utente.getNome(),
+                utente.getCognome(),
+                utente.getEmail(),
+                utente.getIsAdmin()
+        );
+    }
+
+
 }
 

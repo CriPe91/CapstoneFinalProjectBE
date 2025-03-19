@@ -78,8 +78,12 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/eventi/*/prenota/*").hasAuthority("ROLE_USER")
                 .requestMatchers(HttpMethod.DELETE, "/eventi/*/annulla/*").hasAuthority("ROLE_USER")
 
+                //  Solo utenti autenticati possono vedere chi è prenotato a un evento
+                .requestMatchers(HttpMethod.GET, "/eventi/*/prenotati").authenticated()
+
                 //  Utenti che vedono le loro prenotazioni
-                .requestMatchers(HttpMethod.GET, "/eventi/prenotati/{utenteId}").hasAuthority("ROLE_USER")
+                .requestMatchers(HttpMethod.GET, "/eventi/prenotati/*").hasAuthority("ROLE_USER")
+
 
                 //  Solo gli admin possono creare, modificare o eliminare ospedali ed eventi
                 .requestMatchers(HttpMethod.POST, "/ospedali/**").hasAuthority("ROLE_ADMIN")
