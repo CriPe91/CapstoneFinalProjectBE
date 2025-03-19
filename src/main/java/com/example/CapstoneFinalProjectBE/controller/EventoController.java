@@ -3,6 +3,7 @@ package com.example.CapstoneFinalProjectBE.controller;
 import com.example.CapstoneFinalProjectBE.exception.ResourceNotFoundException;
 import com.example.CapstoneFinalProjectBE.model.Utente;
 import com.example.CapstoneFinalProjectBE.payload.EventoDTO;
+import com.example.CapstoneFinalProjectBE.payload.response.ErroreResponseDTO;
 import com.example.CapstoneFinalProjectBE.service.EventoService;
 import com.example.CapstoneFinalProjectBE.service.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/eventi")
@@ -35,10 +37,10 @@ public class EventoController {
     public ResponseEntity<?> creaEvento(@RequestPart("dati") @Validated EventoDTO dto,
                                         @RequestPart(value = "imgEvento", required = false) MultipartFile imgEvento) {
         try {
-            String messaggio = eventoService.creaEvento(dto, imgEvento);
-            return new ResponseEntity<>(messaggio, HttpStatus.CREATED);
+            EventoDTO eventoCreato = eventoService.creaEvento(dto, imgEvento);
+            return new ResponseEntity<>(eventoCreato, HttpStatus.CREATED);
         } catch (IOException e) {
-            return new ResponseEntity<>("Errore durante l'upload dell'immagine: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(Map.of("error", "Errore durante l'upload dell'immagine: " + e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -80,14 +82,14 @@ public class EventoController {
     // MODIFICA EVENTO (Modifica solo i campi presenti nel JSON)
     @PutMapping("/{id}")
     public ResponseEntity<?> modificaEvento(@PathVariable Long id, @RequestBody EventoDTO dto) {
-        String messaggio = eventoService.modificaEvento(id, dto);
-        return new ResponseEntity<>(messaggio, HttpStatus.OK);
+        EventoDTO eventoAggiornato = eventoService.modificaEvento(id, dto);
+        return new ResponseEntity<>(eventoAggiornato, HttpStatus.OK);
     }
 
     // ELIMINA EVENTO
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEvento(@PathVariable Long id) {
-        String messaggio = eventoService.deleteEvento(id);
+        Map<String, String> messaggio = eventoService.deleteEvento(id);
         return new ResponseEntity<>(messaggio, HttpStatus.OK);
     }
 
@@ -95,20 +97,20 @@ public class EventoController {
     @PostMapping("/{eventoId}/prenota/{utenteId}")
     public ResponseEntity<?> prenotaUtente(@PathVariable Long eventoId, @PathVariable Long utenteId) {
         // Recupera l'utente dal database
-        Utente utente = utenteService.findUtenteById(utenteId); // FIX , ABBIAMO IL METODO IN UTENTE SERVICE
+        Utente utente = utenteService.findUtenteById(utenteId);
 
         if (utente == null) {
-            return new ResponseEntity<>("Utente non trovato", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ErroreResponseDTO("Utente non trovato"), HttpStatus.NOT_FOUND);
         }
 
         // Verifica che non sia un admin
         if (utente.getIsAdmin()) {
-            return new ResponseEntity<>("Gli admin non possono prenotarsi agli eventi", HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(new ErroreResponseDTO("Gli admin non possono prenotarsi agli eventi"), HttpStatus.FORBIDDEN);
         }
 
-        // Effettua la prenotazione
-        String messaggio = eventoService.prenotaUtente(eventoId, utenteId);
-        return new ResponseEntity<>(messaggio, HttpStatus.OK);
+        // Effettua la prenotazione e ottiene il JSON
+        Map<String, Object> response = eventoService.prenotaUtente(eventoId, utenteId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     // OTTENERE GLI EVENTI A CUI L'UTENTE È PRENOTATO
@@ -121,7 +123,7 @@ public class EventoController {
     // ANNULLARE UNA PRENOTAZIONE AD UN EVENTO
     @DeleteMapping("/{eventoId}/annulla/{utenteId}")
     public ResponseEntity<?> cancellaPrenotazione(@PathVariable Long eventoId, @PathVariable Long utenteId) {
-        String messaggio = eventoService.cancellaPrenotazione(eventoId, utenteId);
-        return new ResponseEntity<>(messaggio, HttpStatus.OK);
+        Map<String, Object> response = eventoService.cancellaPrenotazione(eventoId, utenteId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

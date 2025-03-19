@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,7 @@ public class EventoService {
     private UtenteRepository utenteRepo;
 
     // CREAZIONE EVENTO (Con immagine)
-    public String creaEvento(EventoDTO dto, MultipartFile imgEvento) throws IOException {
+    public EventoDTO creaEvento(EventoDTO dto, MultipartFile imgEvento) throws IOException {
         Evento evento = dtoToEntity(dto);
 
         // Se è presente un'immagine, la carichiamo su Cloudinary
@@ -52,12 +53,14 @@ public class EventoService {
             evento.setImgEvento((String) uploadResult.get("secure_url"));
         }
 
-        eventoRepo.save(evento);
-        return "Evento creato con ID: " + evento.getId();
+        evento = eventoRepo.save(evento);
+        return entityToDto(evento);
     }
 
     // PRENOTAZIONE UTENTE A UN EVENTO (Solo per utenti normali, no admin)
-    public String prenotaUtente(Long eventoId, Long utenteId) {
+    public Map<String, Object> prenotaUtente(Long eventoId, Long utenteId) {
+        Map<String, Object> response = new HashMap<>();
+
         // Controlla se l'evento esiste
         Evento evento = eventoRepo.findById(eventoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + eventoId));
@@ -68,23 +71,30 @@ public class EventoService {
 
         // Impedisce la prenotazione agli admin
         if (utente.getIsAdmin()) {
-            return "Gli admin non possono prenotarsi agli eventi!";
+            response.put("message", "Gli admin non possono prenotarsi agli eventi!");
+            return response;
         }
 
         // Controlla se l'utente è già prenotato
         if (evento.getUtenti().contains(utente)) {
-            return "L'utente è già prenotato a questo evento!";
+            response.put("message", "L'utente è già prenotato a questo evento!");
+            return response;
         }
 
         // Aggiungi l'utente alla lista prenotati dell'evento
         evento.getUtenti().add(utente);
         eventoRepo.save(evento);
 
-        return "Utente con ID " + utenteId + " prenotato con successo all'evento con ID " + eventoId;
+        // Prepara la risposta JSON
+        response.put("message", "Utente prenotato con successo!");
+        response.put("evento", entityToDto(evento));
+        return response;
     }
 
     // ANNULLARE UNA PRENOTAZIONE
-    public String cancellaPrenotazione(Long eventoId, Long utenteId) {
+    public Map<String, Object> cancellaPrenotazione(Long eventoId, Long utenteId) {
+        Map<String, Object> response = new HashMap<>();
+
         // Controlla se l'evento esiste
         Evento evento = eventoRepo.findById(eventoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + eventoId));
@@ -95,14 +105,18 @@ public class EventoService {
 
         // Controlla se l'utente è già prenotato all'evento
         if (!evento.getUtenti().contains(utente)) {
-            return "L'utente con ID " + utenteId + " non è prenotato a questo evento.";
+            response.put("message", "L'utente con ID " + utenteId + " non è prenotato a questo evento.");
+            return response;
         }
 
         // Rimuove l'utente dalla lista dei prenotati
         evento.getUtenti().remove(utente);
         eventoRepo.save(evento);
 
-        return "Prenotazione annullata con successo per l'utente con ID " + utenteId + " dall'evento con ID " + eventoId;
+        // Prepara la risposta JSON
+        response.put("message", "Prenotazione annullata con successo per l'utente con ID " + utenteId + " dall'evento con ID " + eventoId);
+        response.put("evento", entityToDto(evento));
+        return response;
     }
 
     // OTTENERE UN EVENTO PER ID
@@ -166,7 +180,7 @@ public class EventoService {
     }
 
     // MODIFICA EVENTO (Modifica solo i campi inviati)
-    public String modificaEvento(Long id, EventoDTO dto) {
+    public EventoDTO modificaEvento(Long id, EventoDTO dto) {
         Evento evento = eventoRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + id));
 
@@ -174,17 +188,18 @@ public class EventoService {
         if (dto.getDescrizione() != null) evento.setDescrizione(dto.getDescrizione());
         if (dto.getData() != null) evento.setData(dto.getData());
 
-        eventoRepo.save(evento);
-        return "Evento con ID: " + id + " modificato con successo.";
+        evento = eventoRepo.save(evento);
+        return entityToDto(evento);
     }
 
     // ELIMINA EVENTO
-    public String deleteEvento(Long id) {
+    public Map<String, String> deleteEvento(Long id) {
         Evento evento = eventoRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + id));
 
         eventoRepo.delete(evento);
-        return "Evento con ID: " + id + " eliminato con successo.";
+
+        return Map.of("message", "Evento con ID: " + id + " eliminato con successo.");
     }
 
     // TRAVASO DTO → ENTITY

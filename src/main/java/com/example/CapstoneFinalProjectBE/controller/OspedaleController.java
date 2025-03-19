@@ -1,6 +1,7 @@
 package com.example.CapstoneFinalProjectBE.controller;
 
 import com.example.CapstoneFinalProjectBE.payload.OspedaleDTO;
+import com.example.CapstoneFinalProjectBE.payload.response.ErroreResponseDTO;
 import com.example.CapstoneFinalProjectBE.service.OspedaleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,10 +25,10 @@ public class OspedaleController {
     public ResponseEntity<?> creaOspedale(@RequestPart("dati") @Validated OspedaleDTO dto,
                                           @RequestPart(value = "imgOspedale", required = false) MultipartFile imgOspedale) {
         try {
-            String messaggio = ospedaleService.creaOspedale(dto, imgOspedale);
-            return new ResponseEntity<>(messaggio, HttpStatus.CREATED);
+            OspedaleDTO nuovoOspedale = ospedaleService.creaOspedale(dto, imgOspedale);
+            return new ResponseEntity<>(nuovoOspedale, HttpStatus.CREATED);
         } catch (IOException e) {
-            return new ResponseEntity<>("Errore durante l'upload dell'immagine: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErroreResponseDTO("Errore durante l'upload dell'immagine: " + e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -60,15 +61,13 @@ public class OspedaleController {
     // MODIFICA OSPEDALE (Modifica solo i campi presenti nel JSON)
     @PutMapping("/{id}")
     public ResponseEntity<?> modificaOspedale(@PathVariable Long id, @RequestBody OspedaleDTO dto) {
-        String messaggio = ospedaleService.modificaOspedale(id, dto);
-        return new ResponseEntity<>(messaggio, HttpStatus.OK);
+        OspedaleDTO ospedaleAggiornato = ospedaleService.modificaOspedale(id, dto);
+        return new ResponseEntity<>(ospedaleAggiornato, HttpStatus.OK);
     }
 
     // ELIMINA OSPEDALE
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOspedale(@PathVariable Long id) {
-        String messaggio = ospedaleService.deleteOspedale(id);
-        return new ResponseEntity<>(messaggio, HttpStatus.OK);
+        return new ResponseEntity<>(ospedaleService.deleteOspedale(id), HttpStatus.OK);
     }
-
 }

@@ -9,18 +9,12 @@ import com.example.CapstoneFinalProjectBE.payload.EventoDTO;
 import com.example.CapstoneFinalProjectBE.payload.OspedaleDTO;
 import com.example.CapstoneFinalProjectBE.repository.OspedaleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 @Service
@@ -34,7 +28,7 @@ public class OspedaleService {
     private Cloudinary cloudinary;
 
     // CREAZIONE OSPEDALE (Con supporto immagine)
-    public String creaOspedale(OspedaleDTO dto, MultipartFile imgOspedale) throws IOException {
+    public OspedaleDTO creaOspedale(OspedaleDTO dto, MultipartFile imgOspedale) throws IOException {
         Ospedale ospedale = dtoToEntity(dto);
 
         // Se è presente un'immagine, la carichiamo su Cloudinary
@@ -43,8 +37,11 @@ public class OspedaleService {
             ospedale.setImgOspedale((String) uploadResult.get("secure_url"));
         }
 
-        ospedaleRepo.save(ospedale);
-        return "Ospedale creato con ID: " + ospedale.getId();
+        // Salviamo l'ospedale
+        ospedale = ospedaleRepo.save(ospedale);
+
+        // Ritorniamo il DTO con i dati salvati
+        return entityToDto(ospedale);
     }
 
     // CERCA OSPEDALE PER NOME CON LISTA DI EVENTI ALL INTERNO
@@ -77,7 +74,7 @@ public class OspedaleService {
     }
 
     // MODIFICA OSPEDALE (Modifica solo i campi inviati nel JSON)
-    public String modificaOspedale(Long id, OspedaleDTO dto) {
+    public OspedaleDTO modificaOspedale(Long id, OspedaleDTO dto) {
         Ospedale ospedale = ospedaleRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con ID: " + id));
 
@@ -86,17 +83,24 @@ public class OspedaleService {
         if (dto.getIndirizzo() != null) ospedale.setIndirizzo(dto.getIndirizzo());
         if (dto.getEmail() != null) ospedale.setEmail(dto.getEmail());
 
-        ospedaleRepo.save(ospedale);
-        return "Ospedale con ID: " + id + " modificato con successo.";
+        // Salviamo le modifiche
+        ospedale = ospedaleRepo.save(ospedale);
+
+        // Ritorniamo il DTO con i dati aggiornati
+        return entityToDto(ospedale);
     }
 
     // ELIMINA OSPEDALE
-    public String deleteOspedale(Long id) {
+    public Map<String, String> deleteOspedale(Long id) {
         Ospedale ospedale = ospedaleRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ospedale non trovato con ID: " + id));
 
         ospedaleRepo.delete(ospedale);
-        return "Ospedale con ID: " + id + " eliminato con successo.";
+
+        // Creiamo un JSON con il messaggio di conferma
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Ospedale con ID: " + id + " eliminato con successo.");
+        return response;
     }
 
     // TRAVASO DTO → ENTITY
