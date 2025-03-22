@@ -158,7 +158,7 @@ public class EventoService {
     }
 
     // OTTENERE GLI EVENTI A CUI L'UTENTE È PRENOTATO
-    public Page<EventoDTO> getEventiPrenotati(Long utenteId, Pageable pageable) {
+    public List<EventoDTO> getEventiPrenotati(Long utenteId) {
         // Controlla se l'utente esiste
         Utente utente = utenteRepo.findById(utenteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato con ID: " + utenteId));
@@ -172,7 +172,7 @@ public class EventoService {
             listaEventiDTO.add(entityToDto(evento));
         }
 
-        return new PageImpl<>(listaEventiDTO, pageable, listaEventiDTO.size());
+        return listaEventiDTO;
     }
 
 
@@ -206,6 +206,11 @@ public class EventoService {
         if (dto.getTitolo() != null) evento.setTitolo(dto.getTitolo());
         if (dto.getDescrizione() != null) evento.setDescrizione(dto.getDescrizione());
         if (dto.getData() != null) evento.setData(dto.getData());
+        if (dto.getOspedale() != null && dto.getOspedale().getId() > 0) {
+            Ospedale ospedale = new Ospedale();
+            ospedale.setId(dto.getOspedale().getId());
+            evento.setOspedale(ospedale);
+        }
 
         evento = eventoRepo.save(evento);
         return entityToDto(evento);

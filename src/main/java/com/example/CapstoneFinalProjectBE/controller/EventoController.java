@@ -123,8 +123,8 @@ public class EventoController {
 
     // OTTENERE GLI EVENTI A CUI L'UTENTE È PRENOTATO
     @GetMapping("/prenotati/{utenteId}")
-    public ResponseEntity<Page<EventoDTO>> getEventiPrenotati(@PathVariable Long utenteId, Pageable pageable) {
-        Page<EventoDTO> eventi = eventoService.getEventiPrenotati(utenteId, pageable);
+    public ResponseEntity<List<EventoDTO>> getEventiPrenotati(@PathVariable Long utenteId) {
+        List<EventoDTO> eventi = eventoService.getEventiPrenotati(utenteId);
         return new ResponseEntity<>(eventi, HttpStatus.OK);
     }
 
