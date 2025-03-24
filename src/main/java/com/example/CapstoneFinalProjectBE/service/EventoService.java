@@ -48,6 +48,9 @@ public class EventoService {
     @Autowired
     private UtenteService utenteService;
 
+    @Autowired
+    private EmailService emailService;
+
     // CREAZIONE EVENTO (Con immagine)
     public EventoDTO creaEvento(EventoDTO dto, MultipartFile imgEvento) throws IOException {
         Evento evento = dtoToEntity(dto);
@@ -66,31 +69,40 @@ public class EventoService {
     public Map<String, Object> prenotaUtente(Long eventoId, Long utenteId) {
         Map<String, Object> response = new HashMap<>();
 
-        // Controlla se l'evento esiste
         Evento evento = eventoRepo.findById(eventoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato con ID: " + eventoId));
 
-        // Controlla se l'utente esiste
         Utente utente = utenteRepo.findById(utenteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utente non trovato con ID: " + utenteId));
 
-        // Impedisce la prenotazione agli admin
         if (utente.getIsAdmin()) {
             response.put("message", "Gli admin non possono prenotarsi agli eventi!");
             return response;
         }
 
-        // Controlla se l'utente è già prenotato
         if (evento.getUtenti().contains(utente)) {
             response.put("message", "L'utente è già prenotato a questo evento!");
             return response;
         }
 
-        // Aggiungi l'utente alla lista prenotati dell'evento
         evento.getUtenti().add(utente);
         eventoRepo.save(evento);
 
-        // Prepara la risposta JSON
+        //  Invio email di conferma
+        try {
+            String corpo = "Ciao " + utente.getNome() + ",\n\n"
+                    + "hai prenotato con successo l'evento \"" + evento.getTitolo() + "\" del " + evento.getData() + ".\n"
+                    + "Luogo: " + evento.getOspedale().getNome() + ", " + evento.getOspedale().getIndirizzo() + "\n\n"
+                    + "Grazie per la tua partecipazione!\n"
+                    + "Lo staff di Give Joy ❤️";
+
+            emailService.inviaEmail(utente.getEmail(), "Conferma prenotazione evento", corpo);
+        } catch (Exception e) {
+            response.put("message", "Prenotazione effettuata, ma errore nell'invio dell'email: " + e.getMessage());
+            response.put("evento", entityToDto(evento));
+            return response;
+        }
+
         response.put("message", "Utente prenotato con successo!");
         response.put("evento", entityToDto(evento));
         return response;
