@@ -18,7 +18,7 @@ public class JwtUtil {
     private String JWTSECRET;
 
     //  Durata del token in minuti (Aumentato a 59 min come richiesto)
-    private final long SCADENZA = 59;
+    private final long SCADENZA = 20;
 
     //  Header e prefisso del token
     private final String TOKEN_HEADER = "Authorization";
