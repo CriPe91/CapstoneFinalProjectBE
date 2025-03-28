@@ -17,7 +17,7 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String JWTSECRET;
 
-    //  Durata del token in minuti (Aumentato a 59 min come richiesto)
+    //  Durata del token in minuti
     private final long SCADENZA = 20;
 
     //  Header e prefisso del token
